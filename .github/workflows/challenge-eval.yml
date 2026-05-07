@@ -65,22 +65,18 @@ jobs:
             exit 0
           fi
 
-          CHALLENGE=$(cat .challenge/CHALLENGE.md)
-          RUBRIC=$(cat .challenge/eval/rubric.md)
-          EVAL_CONFIG=$(cat .challenge/eval/eval-config.json)
-          GOLDEN_DIFF=$(head -1000 .challenge/eval/golden-diff.patch)
-          SUBMISSION=$(cat /tmp/submission.patch)
+          head -1000 .challenge/eval/golden-diff.patch > /tmp/golden-truncated.patch
 
           TYPECHECK_RESULT="${{ steps.typecheck.outcome }}"
           LASSO_RESULT="${{ steps.lasso-tests.outcome }}"
           REGRESSIONS="${{ steps.regressions.outputs.regressions }}"
 
           jq -n \
-            --arg challenge "$CHALLENGE" \
-            --arg rubric "$RUBRIC" \
-            --arg eval_config "$EVAL_CONFIG" \
-            --arg golden "$GOLDEN_DIFF" \
-            --arg submission "$SUBMISSION" \
+            --rawfile challenge .challenge/CHALLENGE.md \
+            --rawfile rubric .challenge/eval/rubric.md \
+            --rawfile eval_config .challenge/eval/eval-config.json \
+            --rawfile golden /tmp/golden-truncated.patch \
+            --rawfile submission /tmp/submission.patch \
             --arg typecheck "$TYPECHECK_RESULT" \
             --arg lasso "$LASSO_RESULT" \
             --arg regressions "$REGRESSIONS" \
