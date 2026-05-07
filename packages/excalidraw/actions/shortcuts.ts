@@ -45,6 +45,7 @@ export type ShortcutName =
       | "zoomToFitSelectionInViewport"
       | "zoomToFitSelection"
       | "toggleEraserTool"
+      | "toggleLassoTool"
       | "toggleHandTool"
       | "setFrameAsActiveTool"
       | "saveFileToDisk"
@@ -111,6 +112,7 @@ const shortcutMap: Record<ShortcutName, string[]> = {
   zoomToFit: [getShortcutKey("Shift+1")],
   zoomToFitSelectionInViewport: [getShortcutKey("Shift+2")],
   toggleEraserTool: [getShortcutKey("E")],
+  toggleLassoTool: [getShortcutKey("CtrlOrCmd+Alt")],
   toggleHandTool: [getShortcutKey("H")],
   setFrameAsActiveTool: [getShortcutKey("F")],
   saveFileToDisk: [getShortcutKey("CtrlOrCmd+S")],

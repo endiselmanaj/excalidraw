@@ -11,6 +11,7 @@ import {
   TextIcon,
   ImageIcon,
   EraserIcon,
+  LassoIcon,
   laserPointerToolIcon,
   handIcon,
 } from "./icons";
@@ -105,6 +106,14 @@ export const SHAPES = [
     numericKey: KEYS["0"],
     fillable: false,
     toolbar: true,
+  },
+  {
+    icon: LassoIcon,
+    value: "lasso",
+    key: null,
+    numericKey: null,
+    fillable: false,
+    toolbar: false,
   },
   {
     icon: laserPointerToolIcon,

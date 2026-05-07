@@ -127,6 +127,7 @@ export type ActionName =
   | "toggleElementLock"
   | "toggleLinearEditor"
   | "toggleEraserTool"
+  | "toggleLassoTool"
   | "toggleHandTool"
   | "selectAllElementsInFrame"
   | "removeAllElementsFromFrame"

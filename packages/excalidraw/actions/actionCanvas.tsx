@@ -24,6 +24,7 @@ import {
   getDefaultAppState,
   isEraserActive,
   isHandToolActive,
+  isLassoActive,
 } from "../appState";
 import { ColorPicker } from "../components/ColorPicker/ColorPicker";
 import { ToolButton } from "../components/ToolButton";
@@ -525,6 +526,40 @@ export const actionToggleEraserTool = register({
     };
   },
   keyTest: (event) => event.key === KEYS.E,
+});
+
+export const actionToggleLassoTool = register({
+  name: "toggleLassoTool",
+  label: "toolBar.lasso",
+  trackEvent: { category: "toolbar" },
+  perform: (elements, appState, _, app) => {
+    let activeTool: AppState["activeTool"];
+
+    if (isLassoActive(appState)) {
+      activeTool = updateActiveTool(appState, {
+        ...(appState.activeTool.lastActiveTool || {
+          type: app.state.preferredSelectionTool.type,
+        }),
+        lastActiveToolBeforeEraser: null,
+      });
+    } else {
+      activeTool = updateActiveTool(appState, {
+        type: "lasso",
+        lastActiveToolBeforeEraser: appState.activeTool,
+      });
+    }
+
+    return {
+      appState: {
+        ...appState,
+        selectedElementIds: {},
+        selectedGroupIds: {},
+        activeEmbeddable: null,
+        activeTool,
+      },
+      captureUpdate: CaptureUpdateAction.IMMEDIATELY,
+    };
+  },
 });
 
 export const actionToggleHandTool = register({
