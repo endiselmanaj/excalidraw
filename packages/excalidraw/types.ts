@@ -142,6 +142,7 @@ export type BinaryFiles = Record<ExcalidrawElement["id"], BinaryFileData>;
 
 export type ToolType =
   | "selection"
+  | "lasso"
   | "rectangle"
   | "diamond"
   | "ellipse"
@@ -346,7 +347,7 @@ export interface AppState {
     fromSelection: boolean;
   } & ActiveTool;
   preferredSelectionTool: {
-    type: "selection";
+    type: "selection" | "lasso";
     initialized: boolean;
   };
 

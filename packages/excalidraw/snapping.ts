@@ -169,11 +169,16 @@ export const isSnappingEnabled = ({
   selectedElements: NonDeletedExcalidrawElement[];
 }) => {
   if (event) {
+    const isLassoDragging =
+      app.state.activeTool.type === "lasso" &&
+      app.state.selectedElementsAreBeingDragged;
+
     return (
-      (app.state.objectsSnapModeEnabled && !event[KEYS.CTRL_OR_CMD]) ||
+      (app.state.activeTool.type !== "lasso" || isLassoDragging) &&
+      ((app.state.objectsSnapModeEnabled && !event[KEYS.CTRL_OR_CMD]) ||
         (!app.state.objectsSnapModeEnabled &&
           event[KEYS.CTRL_OR_CMD] &&
-          !isGridModeEnabled(app))
+          !isGridModeEnabled(app)))
     );
   }
 

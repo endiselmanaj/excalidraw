@@ -103,6 +103,7 @@ export const AllowedExcalidrawActiveTools: Record<
   boolean
 > = {
   selection: true,
+  lasso: false,
   text: true,
   rectangle: true,
   diamond: true,

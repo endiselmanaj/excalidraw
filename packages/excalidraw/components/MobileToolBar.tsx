@@ -31,6 +31,7 @@ import {
   frameToolIcon,
   EmbedIcon,
   laserPointerToolIcon,
+  LassoIcon,
   mermaidLogoIcon,
   MagicIcon,
 } from "./icons";
@@ -63,6 +64,11 @@ const SELECTION_TOOLS = [
     type: "selection",
     icon: SelectionIcon,
     title: capitalizeString(t("toolBar.selection")),
+  },
+  {
+    type: "lasso",
+    icon: LassoIcon,
+    title: capitalizeString(t("toolBar.lasso")),
   },
 ] as const;
 
@@ -211,7 +217,7 @@ export const MobileToolBar = ({
         title={capitalizeString(t("toolBar.selection"))}
         data-testid="toolbar-selection"
         onToolChange={(type: string) => {
-          if (type === "selection") {
+          if (type === "selection" || type === "lasso") {
             app.setActiveTool({ type });
             setAppState({
               preferredSelectionTool: { type, initialized: true },

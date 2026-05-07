@@ -2,6 +2,7 @@ import { KEYS } from "@excalidraw/common";
 
 import {
   SelectionIcon,
+  LassoIcon,
   RectangleIcon,
   DiamondIcon,
   EllipseIcon,
@@ -117,7 +118,19 @@ export const SHAPES = [
 ] as const;
 
 export const getToolbarTools = (app: AppClassProperties) => {
-  return SHAPES;
+  return app.state.preferredSelectionTool.type === "lasso"
+    ? ([
+        {
+          value: "lasso",
+          icon: SelectionIcon,
+          key: KEYS.V,
+          numericKey: KEYS["1"],
+          fillable: true,
+          toolbar: true,
+        },
+        ...SHAPES.slice(1),
+      ] as const)
+    : SHAPES;
 };
 
 export const findShapeByKey = (key: string, app: AppClassProperties) => {
