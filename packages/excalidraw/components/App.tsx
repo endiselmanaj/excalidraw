@@ -347,6 +347,7 @@ import {
   getDefaultAppState,
   isEraserActive,
   isHandToolActive,
+  isLassoActive,
 } from "../appState";
 import {
   copyTextToSystemClipboard,
@@ -425,6 +426,8 @@ import { isOverScrollBars } from "../scene/scrollbars";
 import { isMaybeMermaidDefinition } from "../mermaid";
 
 import { EraserTrail } from "../eraser";
+
+import { LassoTrail } from "../lasso";
 
 import { getShortcutKey } from "../shortcut";
 
@@ -704,6 +707,9 @@ class App extends React.Component<AppProps, AppState> {
 
   laserTrails = new LaserTrails(this.animationFrameHandler, this);
   eraserTrail = new EraserTrail(this.animationFrameHandler, this);
+  lassoTrail = new LassoTrail(this.animationFrameHandler, this);
+  private lassoBaseSelection: { [id: string]: true } | null = null;
+  private lassoChordPrevTool: AppState["activeTool"] | null = null;
 
   onChangeEmitter = new Emitter<
     [
@@ -2210,6 +2216,7 @@ class App extends React.Component<AppProps, AppState> {
                             trails={[
                               this.laserTrails,
                               this.eraserTrail,
+                              this.lassoTrail,
                             ]}
                           />
                           {selectedElements.length === 1 &&
@@ -3207,6 +3214,7 @@ class App extends React.Component<AppProps, AppState> {
     this.library.destroy();
     this.laserTrails.stop();
     this.eraserTrail.stop();
+    this.lassoTrail.stop();
     this.onChangeEmitter.clear();
     this.store.onStoreIncrementEmitter.clear();
     this.store.onDurableIncrementEmitter.clear();
@@ -3471,6 +3479,11 @@ class App extends React.Component<AppProps, AppState> {
 
     if (isEraserActive(prevState) && !isEraserActive(this.state)) {
       this.eraserTrail.endPath();
+    }
+
+    if (isLassoActive(prevState) && !isLassoActive(this.state)) {
+      this.lassoTrail.endPath();
+      this.lassoBaseSelection = null;
     }
 
     if (prevProps.viewModeEnabled !== this.props.viewModeEnabled) {
@@ -5086,6 +5099,22 @@ class App extends React.Component<AppProps, AppState> {
         return;
       }
 
+      // Ctrl+Alt (Cmd+Alt on macOS) hold-to-toggle the lasso tool.
+      // We watch for both modifiers being held without any other character
+      // key pressed; releasing either one restores the previous tool.
+      if (
+        event[KEYS.CTRL_OR_CMD] &&
+        event.altKey &&
+        !event.repeat &&
+        this.state.activeTool.type !== "lasso" &&
+        (event.key === KEYS.ALT ||
+          event.key === "Control" ||
+          event.key === "Meta")
+      ) {
+        this.lassoChordPrevTool = this.state.activeTool;
+        this.setActiveTool({ type: "lasso" });
+      }
+
       if (event[KEYS.CTRL_OR_CMD] && !event.repeat) {
         if (getFeatureFlag("COMPLEX_BINDINGS")) {
           this.resetDelayedBindMode();
@@ -5307,6 +5336,26 @@ class App extends React.Component<AppProps, AppState> {
   );
 
   private onKeyUp = withBatchedUpdates((event: KeyboardEvent) => {
+    // Restore previous tool when Ctrl+Alt chord is released
+    if (
+      this.lassoChordPrevTool &&
+      this.state.activeTool.type === "lasso" &&
+      (event.key === KEYS.ALT ||
+        event.key === "Control" ||
+        event.key === "Meta")
+    ) {
+      const restore = this.lassoChordPrevTool;
+      this.lassoChordPrevTool = null;
+      if (restore.type === "custom") {
+        this.setActiveTool({
+          type: "custom",
+          customType: restore.customType,
+        });
+      } else {
+        this.setActiveTool({ type: restore.type });
+      }
+    }
+
     if (event.key === KEYS.SPACE) {
       if (
         (this.state.viewModeEnabled &&
@@ -7328,6 +7377,27 @@ class App extends React.Component<AppProps, AppState> {
     this.triggerRender();
   };
 
+  private handleLasso = (scenePointer: { x: number; y: number }) => {
+    const lassoSelected = this.lassoTrail.addPointToPath(
+      scenePointer.x,
+      scenePointer.y,
+    );
+
+    const nextSelectedElementIds: { [id: string]: true } = {
+      ...(this.lassoBaseSelection ?? {}),
+    };
+    for (const id of lassoSelected) {
+      nextSelectedElementIds[id] = true;
+    }
+
+    this.setState((prevState) => ({
+      selectedElementIds: makeNextSelectedElementIds(
+        nextSelectedElementIds,
+        prevState,
+      ),
+    }));
+  };
+
   // set touch moving for mobile context menu
   private handleTouchMove = (event: React.TouchEvent<HTMLCanvasElement>) => {
     invalidateContextMenu = true;
@@ -7750,7 +7820,8 @@ class App extends React.Component<AppProps, AppState> {
     } else if (
       this.state.activeTool.type !== "eraser" &&
       this.state.activeTool.type !== "hand" &&
-      this.state.activeTool.type !== "image"
+      this.state.activeTool.type !== "image" &&
+      this.state.activeTool.type !== "lasso"
     ) {
       this.createGenericElementOnPointerDown(
         this.state.activeTool.type,
@@ -7767,6 +7838,16 @@ class App extends React.Component<AppProps, AppState> {
 
     if (this.state.activeTool.type === "eraser") {
       this.eraserTrail.startPath(
+        pointerDownState.lastCoords.x,
+        pointerDownState.lastCoords.y,
+      );
+    }
+
+    if (isLassoActive(this.state)) {
+      this.lassoBaseSelection = event.shiftKey
+        ? { ...this.state.selectedElementIds }
+        : {};
+      this.lassoTrail.startPath(
         pointerDownState.lastCoords.x,
         pointerDownState.lastCoords.y,
       );
@@ -9407,6 +9488,11 @@ class App extends React.Component<AppProps, AppState> {
         return;
       }
 
+      if (isLassoActive(this.state)) {
+        this.handleLasso(pointerCoords);
+        return;
+      }
+
       if (this.state.activeTool.type === "laser") {
         this.laserTrails.addPointToPath(pointerCoords.x, pointerCoords.y);
       }
@@ -10809,6 +10895,12 @@ class App extends React.Component<AppProps, AppState> {
 
       const pointerStart = this.lastPointerDownEvent;
       const pointerEnd = this.lastPointerUpEvent || this.lastPointerMoveEvent;
+
+      if (isLassoActive(this.state)) {
+        this.lassoTrail.endPath();
+        this.lassoBaseSelection = null;
+        return;
+      }
 
       if (isEraserActive(this.state) && pointerStart && pointerEnd) {
         this.eraserTrail.endPath();

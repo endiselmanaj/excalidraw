@@ -81,6 +81,7 @@ import {
   DotsHorizontalIcon,
   SelectionIcon,
   pencilIcon,
+  LassoIcon,
 } from "./icons";
 
 import { Island } from "./Island";
@@ -1062,6 +1063,7 @@ export const ShapesSwitcher = ({
 
   const frameToolSelected = activeTool.type === "frame";
   const laserToolSelected = activeTool.type === "laser";
+  const lassoToolSelected = activeTool.type === "lasso";
 
   const embeddableToolSelected = activeTool.type === "embeddable";
 
@@ -1134,6 +1136,7 @@ export const ShapesSwitcher = ({
             "App-toolbar__extra-tools-trigger--selected":
               frameToolSelected ||
               embeddableToolSelected ||
+              lassoToolSelected ||
               // in collab we're already highlighting the laser button
               // outside toolbar, so let's not highlight extra-tools button
               // on top of it
@@ -1149,6 +1152,8 @@ export const ShapesSwitcher = ({
             ? frameToolIcon
             : embeddableToolSelected
             ? EmbedIcon
+            : lassoToolSelected
+            ? LassoIcon
             : laserToolSelected && !app.props.isCollaborating
             ? laserPointerToolIcon
             : extraToolsIcon}
@@ -1183,6 +1188,14 @@ export const ShapesSwitcher = ({
             shortcut={KEYS.K.toLocaleUpperCase()}
           >
             {t("toolBar.laser")}
+          </DropdownMenu.Item>
+          <DropdownMenu.Item
+            onSelect={() => app.setActiveTool({ type: "lasso" })}
+            icon={LassoIcon}
+            data-testid="toolbar-lasso"
+            selected={lassoToolSelected}
+          >
+            {t("toolBar.lasso")}
           </DropdownMenu.Item>
           <div style={{ margin: "6px 0", fontSize: 14, fontWeight: 600 }}>
             Generate
