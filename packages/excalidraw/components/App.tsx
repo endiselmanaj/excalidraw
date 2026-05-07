@@ -9794,20 +9794,16 @@ class App extends React.Component<AppProps, AppState> {
         // if elements should be deselected on pointerup
         pointerDownState.drag.hasOccurred = true;
 
-        // prevent immediate dragging during lasso selection to avoid element displacement
-        // only allow dragging if we're not in the middle of lasso selection
-        // (on mobile, allow dragging if we hit an element)
-        if (
+        // During active lasso selection, skip the element-drag logic to avoid
+        // displacing elements. On mobile we allow dragging if we hit an element.
+        const blockDragForLasso =
           this.state.activeTool.type === "lasso" &&
           this.lassoTrail.hasCurrentTrail &&
           !(
             this.editorInterface.formFactor !== "desktop" &&
             pointerDownState.hit.element
           ) &&
-          !this.state.activeTool.fromSelection
-        ) {
-          return;
-        }
+          !this.state.activeTool.fromSelection;
 
         // Clear lasso trail when starting to drag selected elements with lasso tool
         // Only clear if we're actually dragging (not during lasso selection)
@@ -9824,6 +9820,7 @@ class App extends React.Component<AppProps, AppState> {
         // it would have weird results (stuff jumping all over the screen)
         // Checking for editingTextElement to avoid jump while editing on mobile #6503
         if (
+          !blockDragForLasso &&
           selectedElements.length > 0 &&
           !pointerDownState.withCmdOrCtrl &&
           !this.state.editingTextElement &&

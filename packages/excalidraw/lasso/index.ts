@@ -182,15 +182,17 @@ export class LassoTrail extends AnimatedTrail {
       zoom: this.app.state.zoom.value,
     };
 
+    const allElements = this.app.scene.getNonDeletedElements();
+
     if (
       !this.elementsSegments ||
       !isShallowEqual(currentCanvasTranslate, this.canvasTranslate ?? {})
     ) {
       this.canvasTranslate = currentCanvasTranslate;
       this.elementsSegments = new Map();
-      const visibleElementsMap = arrayToMap(this.app.visibleElements);
-      for (const element of this.app.visibleElements) {
-        const segments = getElementLineSegments(element, visibleElementsMap);
+      const allElementsMap = arrayToMap(allElements);
+      for (const element of allElements) {
+        const segments = getElementLineSegments(element, allElementsMap);
         this.elementsSegments.set(element.id, segments);
       }
     }
@@ -198,7 +200,7 @@ export class LassoTrail extends AnimatedTrail {
     if (lassoPath) {
       const { selectedElementIds } = getLassoSelectedElementIds({
         lassoPath,
-        elements: this.app.visibleElements,
+        elements: allElements,
         elementsMap: this.app.scene.getNonDeletedElementsMap(),
         elementsSegments: this.elementsSegments,
         intersectedElements: this.intersectedElements,
